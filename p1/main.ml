@@ -1,6 +1,13 @@
 open Core_kernel.Std
 
+type dir = Left of int | Right of int
+
+let parse s = Lexing.from_string s |> Lexer.tokens |> List.filter_map ~f:(
+  function
+  | Lexer.LEFT x -> Some (Left x)
+  | Lexer.RIGHT x -> Some (Right x)
+  | Lexer.EOF -> None)
+
 let () =
-  let parse s = Lexing.from_string s |> Parser.dirs Lexer.read in
-  assert (parse "R1, L1" = [Dirs.Right 1; Dirs.Left 1]);
+  assert (parse "R1, L1" = [Right 1; Left 1]);
   print_endline "lol"

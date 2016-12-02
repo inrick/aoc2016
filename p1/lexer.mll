@@ -1,6 +1,7 @@
 {
-open Parser
 module L = Lexing
+
+type token = LEFT of int | RIGHT of int | EOF
 
 exception Syntax_error of string
 }
@@ -13,9 +14,8 @@ rule read = parse
   | ws { read lexbuf }
   | ',' { read lexbuf }
   | nl { L.new_line lexbuf; read lexbuf }
-  | int { INT (int_of_string (L.lexeme lexbuf)) }
-  | 'L' { LEFT }
-  | 'R' { RIGHT }
+  | 'L' (int as i) { LEFT (int_of_string i) }
+  | 'R' (int as i) { RIGHT (int_of_string i) }
   | _ { raise (Syntax_error ("Unknown character: " ^ L.lexeme lexbuf)) }
   | eof { EOF }
 
