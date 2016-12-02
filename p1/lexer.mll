@@ -14,7 +14,7 @@ rule read = parse
   | ws { read lexbuf }
   | ',' { read lexbuf }
   | nl { L.new_line lexbuf; read lexbuf }
-  | 'L' (int as i) { LEFT (int_of_string i) }
-  | 'R' (int as i) { RIGHT (int_of_string i) }
+  | 'L' (int as n) { LEFT (int_of_string n) }
+  | 'R' (int as n) { RIGHT (int_of_string n) }
   | _ { raise (Syntax_error ("Unknown character: " ^ L.lexeme lexbuf)) }
   | eof { EOF }

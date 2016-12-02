@@ -1,44 +1,48 @@
 open Core_kernel.Std
-open Printf
 
 module Coord = struct
   type t = int * int
 
-  let dist (x1, y1) (x2, y2) = abs (x1 - x2) + abs (y1 - y2)
-
-  let (+) (x1, y1) (x2, y2) = (x1 + x2, y1 + y2)
+  let dist (a, b) (c, d) = abs (a - c) + abs (b - d)
+  let (+) (a, b) (c, d) = (a + c, b + d)
+  let sum = List.fold_left ~init:(0,0) ~f:(+)
 end
 
-type orient = N | W | E | S
-type dir = L of int | R of int
+type direction = N | W | E | S
+type move = direction * int
+type step = L of int | R of int
 
-let directions lexbuf =
+let lex_steps lexbuf =
   let open Lexer in
   let rec go xs = function
     | EOF -> List.rev xs
-    | LEFT i -> go (L i::xs) (read lexbuf)
-    | RIGHT i -> go (R i::xs) (read lexbuf)
+    | LEFT n -> go (L n::xs) (read lexbuf)
+    | RIGHT n -> go (R n::xs) (read lexbuf)
   in go [] (read lexbuf)
 
-let parse s = Lexing.from_string s |> directions
+let parse s = Lexing.from_string s |> lex_steps
 
-let move current_pos orient dir =
-  let new_orient, diff = match orient, dir with
-  | N, L i | S, R i -> W, (-i, 0)
-  | N, R i | S, L i -> E, (i, 0)
-  | W, L i | E, R i -> S, (0, -i)
-  | W, R i | E, L i -> N, (0, i) in
-  new_orient, Coord.(current_pos + diff)
+let move dir step = match dir, step with
+  | N, L n | S, R n -> W, n
+  | N, R n | S, L n -> E, n
+  | W, L n | E, R n -> S, n
+  | W, R n | E, L n -> N, n
 
-let navigate start_orient start_pos dirs =
-  let _, end_pos = List.fold_left dirs ~init:(start_orient, start_pos) ~f:(
-    fun (orient, pos) dir -> move pos orient dir) in
-  end_pos
+let move_to_coord = function
+  | N, n -> (0, n)
+  | W, n -> (-n, 0)
+  | E, n -> (n, 0)
+  | S, n -> (0, -n)
+
+let moves start_dir steps =
+  let rec go (dir,_) moves = function
+    | [] -> List.rev moves
+    | step::steps -> let next = move dir step in go next (next::moves) steps in
+  go (start_dir,0) [] steps
 
 let () =
-  let dirs = In_channel.read_all "input.txt" |> parse in
-  let start_pos = 0, 0 in
-  let end_pos = navigate N start_pos dirs in
-  let x, y = end_pos in
-  printf "End coordinate: (%d, %d), distance: %d\n" x y
-    (Coord.dist start_pos end_pos)
+  let open Printf in
+  let steps = In_channel.read_all "input.txt" |> parse in
+  let end_pos = moves N steps |> List.map ~f:move_to_coord |> Coord.sum in
+  printf "End coordinate: (%d, %d), distance: %d\n"
+    (fst end_pos) (snd end_pos) (Coord.dist (0,0) end_pos)
