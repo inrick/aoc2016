@@ -68,15 +68,23 @@ module Solver(K : KEYPAD) = struct
     |> snd |> List.rev_map ~f:K.key |> String.concat
 end
 
-let lex_instrs lexbuf =
+let parse s = Lexing.from_string s |> fun lexbuf ->
   let open Lexer in
-  List.map (tokens lexbuf) (function
-    | UP -> U | DOWN -> D | LEFT -> L | RIGHT -> R | EOF -> assert false)
-
-let parse s = Lexing.from_string s |> lex_instrs
+  let rec go acc line = function
+    | [] -> assert false (* token list ends with EOF *)
+    | t::ts ->
+      let found x = go acc (x::line) ts in
+      (match t with
+      | EOF -> List.(filter (line::acc) (fun xs -> not (is_empty xs)) |> rev)
+      | NEWLINE -> go (List.rev line :: acc) [] ts
+      | UP -> found U
+      | DOWN -> found D
+      | LEFT -> found L
+      | RIGHT -> found R) in
+  go [] [] (tokens lexbuf)
 
 let () =
-  let input = In_channel.read_lines "input.txt" |> List.map ~f:parse in
+  let input = In_channel.read_all "input.txt" |> parse in
   let module S1 = Solver(Keypad1) in
   let code1 = S1.solve input in
   print_endline code1;
