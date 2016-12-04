@@ -10,7 +10,7 @@ module type KEYPAD = sig
   val key : state -> string
 end
 
-module Keypad1 = struct
+module Keypad1 : KEYPAD = struct
   type t = int array array
   type state = int * int
 
@@ -28,7 +28,7 @@ module Keypad1 = struct
   let key (x, y) = string_of_int keypad.(x).(y)
 end
 
-module Keypad2 = struct
+module Keypad2 : KEYPAD = struct
   type t = char option array array
   type state = int * int
 
