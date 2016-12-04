@@ -68,6 +68,16 @@ module Solver(K : KEYPAD) = struct
     |> snd |> List.rev_map ~f:K.key |> String.concat
 end
 
+let hack_parse s =
+  let parse_row row = String.to_list row
+    |> List.filter_map ~f:(function
+      | 'U' -> Some U
+      | 'D' -> Some D
+      | 'L' -> Some L
+      | 'R' -> Some R
+      | _ -> None) in
+  String.split_lines s |> List.map ~f:parse_row
+
 let parse s = Lexing.from_string s |> fun lexbuf ->
   let open Lexer in
   let rec go acc line = function
