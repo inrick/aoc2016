@@ -28,6 +28,37 @@ module Keypad1 = struct
   let key (x, y) = string_of_int keypad.(x).(y)
 end
 
+module Keypad2 = struct
+  type t = char option array array
+  type state = int * int
+
+  let keypad = [|
+    [|None;     None;     Some '1'; None;     None|];
+    [|None;     Some '2'; Some '3'; Some '4'; None|];
+    [|Some '5'; Some '6'; Some '7'; Some '8'; Some '9'|];
+    [|None;     Some 'A'; Some 'B'; Some 'C'; None|];
+    [|None;     None;     Some 'D'; None;     None|]
+  |]
+
+  let initial_state = 2, 0 (* 5 on keypad *)
+
+  let move (row,col) =
+    let try_move (a,b) =
+      match keypad.(a).(b) with
+      | Some _ -> a, b
+      | None -> row, col
+      | exception _ -> row, col in
+    function
+    | U -> try_move (row-1, col)
+    | D -> try_move (row+1, col)
+    | L -> try_move (row, col-1)
+    | R -> try_move (row, col+1)
+
+  let key (x, y) = match keypad.(x).(y) with
+    | None -> failwith "invalid state"
+    | Some k -> Char.to_string k
+end
+
 module Solver(K : KEYPAD) = struct
   let solve input =
     List.fold_left input ~init:(K.initial_state, []) ~f:(
@@ -48,4 +79,7 @@ let () =
   let input = In_channel.read_lines "input.txt" |> List.map ~f:parse in
   let module S1 = Solver(Keypad1) in
   let code1 = S1.solve input in
-  print_endline code1
+  print_endline code1;
+  let module S2 = Solver(Keypad2) in
+  let code2 = S2.solve input in
+  print_endline code2
