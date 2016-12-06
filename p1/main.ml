@@ -8,6 +8,15 @@ module List = struct
       let z = f x y in z, z::zs) |> snd |> rev
 end
 
+module Sequence = struct
+  include Sequence
+
+  let scan xs ~init ~f =
+    fold xs ~init:(init, empty) ~f:(fun (x, zs) y ->
+      let z = f x y in z, append zs (return z))
+    |> snd
+end
+
 module Coord = struct
   type t = int * int
 
@@ -43,11 +52,28 @@ let move_to_coord = function (* x, y *)
   | S -> 0, -1
   | W -> -1, 0
 
+exception Found of Coord.t
+
 let () =
   let open Printf in
   let steps, magns = In_channel.read_all "input.txt" |> parse in
-  let end_coord = List.(scan_left steps ~init:N ~f:move
-    >>| move_to_coord |> map2_exn magns ~f:Coord.( * )
-    |> fold_left ~init:(0,0) ~f:Coord.(+)) in
+  let moves = List.(scan_left steps ~init:N ~f:move >>| move_to_coord) in
+  let end_coord = moves
+    |> List.map2_exn magns ~f:Coord.( * )
+    |> List.fold_left ~init:(0,0) ~f:Coord.(+) in
   printf "Part 1: end coordinate: (%d, %d), distance: %d\n"
+    (fst end_coord) (snd end_coord) (Coord.dist (0,0) end_coord);
+  let visited = Hashtbl.create ~hashable:Hashtbl.Poly.hashable () in
+  let moves = Array.of_list moves in
+  let all_moves = Sequence.(of_list magns
+    |> concat_mapi ~f:(fun i x -> init x ~f:(fun _ -> moves.(i)))
+    |> scan ~init:(0,0) ~f:Coord.(+)) in
+  let end_coord =
+    try
+      Sequence.iter all_moves (fun c -> match Hashtbl.add visited c () with
+      | `Duplicate -> raise (Found c)
+      | `Ok -> ()) |> fun _ -> assert false
+    with Found p -> p
+  in
+  printf "Part 2: end coordinate: (%d, %d), distance: %d\n"
     (fst end_coord) (snd end_coord) (Coord.dist (0,0) end_coord);
