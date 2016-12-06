@@ -4,10 +4,8 @@ module List = struct
   include List
 
   let scan_left xs ~init ~f =
-    let rec go q ls = q :: match ls with
-      | [] -> []
-      | y::ys -> go (f q y) ys in
-    go init xs
+    fold_left xs ~init:(init, []) ~f:(fun (x, zs) y ->
+      let z = f x y in z, z::zs) |> snd |> rev
 
   let each_pair xs ~f =
     let rec go acc = function
