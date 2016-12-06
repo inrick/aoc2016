@@ -11,7 +11,6 @@ module type KEYPAD = sig
 end
 
 module Keypad1 : KEYPAD = struct
-  type t = int array array
   type state = int * int
 
   let keypad = [|[|1;2;3|];[|4;5;6|];[|7;8;9|]|]
@@ -29,7 +28,6 @@ module Keypad1 : KEYPAD = struct
 end
 
 module Keypad2 : KEYPAD = struct
-  type t = char option array array
   type state = int * int
 
   let keypad = [|
