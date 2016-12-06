@@ -6,12 +6,6 @@ module List = struct
   let scan_left xs ~init ~f =
     fold_left xs ~init:(init, []) ~f:(fun (x, zs) y ->
       let z = f x y in z, z::zs) |> snd |> rev
-
-  let each_pair xs ~f =
-    let rec go acc = function
-      | x::y::tl -> go (f x y::acc) (y::tl)
-      | [_] | [] -> List.rev acc in
-    go [] xs
 end
 
 module Coord = struct
