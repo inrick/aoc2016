@@ -19,83 +19,41 @@ module Coord = struct
 
   let dist (a, b) (c, d) = abs (a - c) + abs (b - d)
   let (+) (a, b) (c, d) = (a + c, b + d)
-  let sum = List.fold_left ~init:(0,0) ~f:(+)
+  let ( * ) k (a, b) = (k*a, k*b)
   let show (a, b) = Printf.sprintf "(%d, %d)" a b
 end
 
-module Visited = struct
-  type t = (Coord.t, unit) Hashtbl.t
+type step = L | R
+type direction = N | E | S | W (* 0, 1, 2, 3 *)
 
-  exception Found of Coord.t
+let parse s =
+  let ss = String.(strip s |> filter ~f:(Char.(<>) ',') |> split ~on:' ') in
+  let steps = List.filter_map ss ~f:(fun s ->
+    match s.[0] with
+    | 'L' -> Some L
+    | 'R' -> Some R
+    | _ -> None) in
+  let magnitudes =
+    List.map ss ~f:(fun s -> String.slice s 1 0 |> int_of_string) in
+  steps, magnitudes
 
-  let create () = Hashtbl.create ~hashable:Hashtbl.Poly.hashable ()
+let move prev dir = match prev, dir with
+  | N, L | S, R -> W
+  | E, L | W, R -> N
+  | S, L | N, R -> E
+  | W, L | E, R -> S
 
-  let range p q =
-    let points a b =
-      let xs =
-        List.range ~start:`inclusive ~stop:`inclusive (min a b) (max a b) in
-      List.drop (if a <= b then xs else List.rev xs) 1 in
-    match p, q with
-    | (a, b), (c, d) when a = c -> List.map (points b d) (fun x -> a, x)
-    | (a, b), (c, d) when b = d -> List.map (points a c) (fun x -> x, b)
-    | _ -> assert false (* invalid segment *)
-
-  let add_point visited x = match Hashtbl.add visited x () with
-    | `Duplicate -> raise (Found x)
-    | `Ok -> ()
-
-  let add_segments visited x1 x2 =
-    range x1 x2 |> List.iter ~f:(add_point visited)
-end
-
-type direction = N | W | E | S
-type move = direction * int
-type step = L of int | R of int
-
-let lex_steps lexbuf =
-  let open Lexer in
-  let rec go xs = function
-    | EOF -> List.rev xs
-    | LEFT n -> go (L n::xs) (read lexbuf)
-    | RIGHT n -> go (R n::xs) (read lexbuf)
-  in go [] (read lexbuf)
-
-let parse s = Lexing.from_string s |> lex_steps
-
-let move dir step = match dir, step with
-  | N, L n | S, R n -> W, n
-  | N, R n | S, L n -> E, n
-  | W, L n | E, R n -> S, n
-  | W, R n | E, L n -> N, n
-
-let move_to_coord = function
-  | N, n -> (0, n)
-  | W, n -> (-n, 0)
-  | E, n -> (n, 0)
-  | S, n -> (0, -n)
-
-let moves start_dir steps =
-  let rec go (dir,_) moves = function
-    | [] -> List.rev moves
-    | step::steps -> let next = move dir step in go next (next::moves) steps in
-  go (start_dir,0) [] steps
+let move_to_coord = function (* x, y *)
+  | N -> 0, 1
+  | E -> 1, 0
+  | S -> 0, -1
+  | W -> -1, 0
 
 let () =
   let open Printf in
-  let steps = In_channel.read_all "input.txt" |> parse in
-  let end_pos = moves N steps |> List.map ~f:move_to_coord |> Coord.sum in
+  let steps, magns = In_channel.read_all "input.txt" |> parse in
+  let end_coord = List.(scan_left steps ~init:N ~f:move
+    >>| move_to_coord |> map2_exn magns ~f:Coord.( * )
+    |> fold_left ~init:(0,0) ~f:Coord.(+)) in
   printf "Part 1: end coordinate: (%d, %d), distance: %d\n"
-    (fst end_pos) (snd end_pos) (Coord.dist (0,0) end_pos);
-  let visited = Visited.create () in
-  Visited.add_point visited (0,0);
-  (* let steps = parse "R8, R4, R4, R8" in*)
-  let end_pos =
-    try
-      List.(moves N steps
-      |> map ~f:move_to_coord
-      |> scan_left ~init:(0,0) ~f:Coord.(+)
-      |> each_pair ~f:(Visited.add_segments visited)
-      |> fun _ -> failwith "not found")
-    with Visited.Found p -> p in
-  printf "Part 2: end coordinate: (%d, %d), distance: %d\n"
-    (fst end_pos) (snd end_pos) (Coord.dist (0,0) end_pos);
+    (fst end_coord) (snd end_coord) (Coord.dist (0,0) end_coord);
