@@ -23,7 +23,6 @@ module Coord = struct
   let dist (a, b) (c, d) = abs (a - c) + abs (b - d)
   let (+) (a, b) (c, d) = (a + c, b + d)
   let ( * ) k (a, b) = (k*a, k*b)
-  let show (a, b) = Printf.sprintf "(%d, %d)" a b
 end
 
 type step = L | R
