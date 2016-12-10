@@ -17,7 +17,7 @@ let validate r =
     |> sort ~cmp:Char.compare
     |> group ~break:(<>)
     |> sort ~cmp:(fun xs ys -> length ys - length xs)
-    |> fun xs -> take xs 5
+    |> Fn.flip take 5
     |> map ~f:hd_exn
     |> String.of_char_list in
   chk = r.chk
@@ -31,12 +31,12 @@ let rotate n c =
 let decrypt r = {r with name = String.map r.name (rotate r.id)}
 
 let () =
-  let input = In_channel.read_lines "input.txt" in
-  let rooms = List.map input parse in
+  let open List in
+  let rooms = In_channel.read_lines "input.txt" >>| parse in
   let sum =
-    List.filter_map rooms ~f:(fun r -> if validate r then Some r.id else None)
-    |> List.fold_left ~init:0 ~f:(+) in
+    filter_map rooms ~f:(fun r -> if validate r then Some r.id else None)
+    |> fold ~init:0 ~f:(+) in
   printf "%d\n" sum;
-  let candidate = List.(rooms >>| decrypt |> find_exn ~f:(fun r ->
-    String.substr_index r.name ~pattern:"north" |> Option.is_some)) in
+  let candidate = rooms >>| decrypt |> find_exn ~f:(fun r ->
+    String.substr_index r.name ~pattern:"north" |> Option.is_some) in
   printf "%d\n" candidate.id
