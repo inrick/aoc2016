@@ -51,8 +51,6 @@ let move_to_coord = function (* x, y *)
   | S -> 0, -1
   | W -> -1, 0
 
-exception Found of Coord.t
-
 let () =
   let open Printf in
   let steps, magns = In_channel.read_all "input.txt" |> parse in
@@ -67,12 +65,10 @@ let () =
   let all_moves = Sequence.(of_list magns
     |> concat_mapi ~f:(fun i x -> init x ~f:(fun _ -> moves.(i)))
     |> scan ~init:(0,0) ~f:Coord.(+)) in
-  let end_coord =
-    try
-      Sequence.iter all_moves (fun c -> match Hashtbl.add visited c () with
-      | `Duplicate -> raise (Found c)
-      | `Ok -> ()) |> fun _ -> assert false
-    with Found p -> p
-  in
-  printf "Part 2: end coordinate: (%d, %d), distance: %d\n"
-    (fst end_coord) (snd end_coord) (Coord.dist (0,0) end_coord);
+  let end_coord = Sequence.find_map all_moves (fun c ->
+    match Hashtbl.add visited c () with
+    | `Duplicate -> Some c
+    | `Ok -> None) in
+  Option.iter end_coord (fun (x,y) ->
+    printf "Part 2: end coordinate: (%d, %d), distance: %d\n"
+      x y (Coord.dist (0,0) (x,y)));
