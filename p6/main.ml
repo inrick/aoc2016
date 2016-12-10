@@ -5,8 +5,7 @@ let solve xs solver =
   xs >>| String.to_list
     |> transpose_exn
     >>| solver
-    >>| hd
-    >>= Option.to_list
+    |> filter_map ~f:hd
     |> String.of_char_list
 
 let solver1 chrs =
