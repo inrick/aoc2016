@@ -8,15 +8,6 @@ module List = struct
       let z = f x y in z, z::zs) |> snd |> rev
 end
 
-module Sequence = struct
-  include Sequence
-
-  let scan xs ~init ~f =
-    fold xs ~init:(init, empty) ~f:(fun (x, zs) y ->
-      let z = f x y in z, append zs (return z))
-    |> snd
-end
-
 module Coord = struct
   type t = int * int
 
@@ -64,7 +55,8 @@ let () =
   let moves = Array.of_list moves in
   let all_moves = Sequence.(of_list magns
     |> concat_mapi ~f:(fun i x -> init x ~f:(fun _ -> moves.(i)))
-    |> scan ~init:(0,0) ~f:Coord.(+)) in
+    |> unfold_with ~init:(0,0) ~f:(fun x y ->
+      let z = Coord.(x + y) in Step.Yield(z, z))) in
   let end_coord = Sequence.find_map all_moves (fun c ->
     match Hashtbl.add visited c () with
     | `Duplicate -> Some c
