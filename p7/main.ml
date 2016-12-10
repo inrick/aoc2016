@@ -20,15 +20,16 @@ let support_tls ip =
 
 let find_abas s =
   let rec go acc = function
-    | a :: b :: c :: tl when a = c && a <> b -> go ([a;b;a] :: acc) (b::c::tl)
+    | a :: b :: c :: tl when a = c && a <> b ->
+        go (sprintf "%c%c%c" a b a :: acc) (b::c::tl)
     | _ :: tl -> go acc tl
-    | [] -> List.(acc >>| String.of_char_list |> rev) in
+    | [] -> List.rev acc in
   go [] (String.to_list s)
 
 let any_bab abas s =
   let rec go i = function
     | a :: b :: c :: tl when a = c && a <> b ->
-      S.mem abas (String.of_char_list [b;a;b]) || go (i+1) (b::c::tl)
+      S.mem abas (sprintf "%c%c%c" b a b) || go (i+1) (b::c::tl)
     | _ :: tl -> go (i+1) tl
     | [] -> false in
   go 0 (String.to_list s)
