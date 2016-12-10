@@ -4,7 +4,7 @@ module List = struct
   include List
 
   let scan_left xs ~init ~f =
-    fold_left xs ~init:(init, []) ~f:(fun (x, zs) y ->
+    fold xs ~init:(init, []) ~f:(fun (x, zs) y ->
       let z = f x y in z, z::zs) |> snd |> rev
 end
 
@@ -59,7 +59,7 @@ let () =
   let moves = List.(scan_left steps ~init:N ~f:move >>| move_to_coord) in
   let end_coord = moves
     |> List.map2_exn magns ~f:Coord.( * )
-    |> List.fold_left ~init:(0,0) ~f:Coord.(+) in
+    |> List.fold ~init:(0,0) ~f:Coord.(+) in
   printf "Part 1: end coordinate: (%d, %d), distance: %d\n"
     (fst end_coord) (snd end_coord) (Coord.dist (0,0) end_coord);
   let visited = Hashtbl.create ~hashable:Hashtbl.Poly.hashable () in
