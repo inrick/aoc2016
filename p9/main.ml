@@ -11,13 +11,18 @@ let repeat n s =
   done;
   unsafe_to_string buf
 
+let next_group s from =
+  let rec go i = match s.[i] with
+    | ')' -> i
+    | _ -> go (i+1) in
+  go from
+
+let parse_group s start stop =
+  String.slice s start stop |> fun t -> sscanf t "(%dx%d)" Tuple2.create
+
 let process s =
   let open String in
-  let next_group from =
-    let rec go i = match s.[i] with
-      | ')' -> i
-      | _ -> go (i+1) in
-    go from in
+  let next_group = next_group s in
   let decompress from (x,y) =
     let to_repeat = slice s from (from+x) in
     repeat y to_repeat in
@@ -25,8 +30,7 @@ let process s =
   let rec go acc last i = match s.[i] with
     | '(' ->
       let stop = next_group i in
-      let x, y = slice s i (stop+1)
-        |> fun t -> sscanf t "(%dx%d)" Tuple2.create in
+      let x, y = parse_group s i (stop+1) in
       let before = slice_before last i in
       let decompressed = decompress (stop+1) (x,y) in
       go (decompressed :: before :: acc) (stop+1+x) (stop+1+x)
@@ -35,8 +39,24 @@ let process s =
   in
   go [] 0 0
 
+let count2 s =
+  let next_group = next_group s in
+  let rec count n from until =
+    if from > until then n
+    else if from = until then n+1
+    else match s.[from] with
+    | '(' ->
+      let stop = next_group from in
+      let x, y = parse_group s from (stop+1) in
+      let end_next = stop + x in
+      let sub_count = y * count 0 (stop+1) end_next in
+      count (n + sub_count) (end_next+1) until
+    | _ -> count (n+1) (from+1) until in
+  count 0 0 (String.length s - 1)
+
 let () =
   let input = In_channel.read_all "input.txt" |> String.strip in
   let output = process input in
   (* print_endline output;*)
   printf "%d\n" (String.length output);
+  printf "%d\n" (count2 input);
