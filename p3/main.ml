@@ -15,9 +15,9 @@ let transpose3 = function (* List.transpose_exn already does this in general *)
 
 let () =
   let input = In_channel.read_all "input.txt" |> parse in
-  let possible = List.(filter input is_possible |> length) in
+  let possible = List.count input is_possible in
   printf "Part 1, possible: %d\n" possible;
   let input =
     List.(groupi input (fun i _ _ -> i mod 3 = 0) >>| transpose3 |> concat) in
-  let possible = List.(filter input is_possible |> length) in
+  let possible = List.count input is_possible in
   printf "Part 2, possible: %d\n" possible;
