@@ -41,18 +41,19 @@ let process s =
 
 let count2 s =
   let next_group = next_group s in
-  let rec count n from until =
-    if from > until then n
-    else if from = until then n+1
+  let rec count n from until k =
+    if from > until then k n
+    else if from = until then k (n+1)
     else match s.[from] with
     | '(' ->
       let stop = next_group from in
       let x, y = parse_group s from (stop+1) in
       let end_next = stop + x in
-      let sub_count = y * count 0 (stop+1) end_next in
-      count (n + sub_count) (end_next+1) until
-    | _ -> count (n+1) (from+1) until in
-  count 0 0 (String.length s - 1)
+      count 0 (stop+1) end_next @@ fun sub_count ->
+        count n (end_next+1) until @@ fun rest ->
+          k (y*sub_count + rest)
+    | _ -> count (n+1) (from+1) until k in
+  count 0 0 (String.length s - 1) ident
 
 let () =
   let input = In_channel.read_all "input.txt" |> String.strip in
