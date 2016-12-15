@@ -27,3 +27,4 @@ let solve discs =
 let () =
   let discs = In_channel.read_all "input.txt" |> parse_discs in
   printf "%d\n" (solve discs);
+  printf "%d\n" (solve (discs @ [{positions=11; current=0}]));
