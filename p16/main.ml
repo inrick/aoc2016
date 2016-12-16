@@ -12,14 +12,9 @@ let generate len input =
   go input
 
 let chksum input =
-  let module B = BytesLabels in
   let step s =
     let len = String.length s lsr 1 in
-    let buf = B.create len in
-    for i = 0 to len-1 do
-      B.set buf i (if s.[2*i] = s.[2*i+1] then '1' else '0')
-    done;
-    B.unsafe_to_string buf in
+    String.init len (fun i -> if s.[2*i] = s.[2*i+1] then '1' else '0') in
   let rec go s =
     if String.length s land 0b1 = 0 then step s |> go
     else s in
