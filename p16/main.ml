@@ -30,3 +30,6 @@ let () =
   let data = generate 272 input in
   let chk = chksum data in
   print_endline chk;
+  let data2 = generate 35651584 input in
+  let chk2 = chksum data2 in
+  print_endline chk2;
