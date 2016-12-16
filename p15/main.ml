@@ -16,13 +16,10 @@ let next disc = {disc with current=(disc.current+1) mod disc.positions}
 
 let solve discs =
   let open List in
-  let can_get_capsule ds =
-    mapi ds ~f:(fun n -> Fn.apply_n_times ~n:(n+1) next)
-    |> for_all ~f:(fun d -> d.current = 0) in
   let rec go n ds =
-    if can_get_capsule ds then n
+    if for_all ds (fun d -> d.current = 0) then n
     else map ds next |> go (n+1) in
-  go 0 discs
+  mapi discs (fun n -> Fn.apply_n_times ~n:(n+1) next) |> go 0
 
 let () =
   let discs = In_channel.read_all "input.txt" |> parse_discs in
