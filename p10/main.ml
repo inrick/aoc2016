@@ -55,7 +55,7 @@ let process target instrs =
           let bots = add_bot bots bid {bot with high=None} in
           send_to bots h bot.high_to k)
       | _, _ -> k bots)
-    | Output _ -> k bots in
+    | Output i -> printf "Output %d got value %d\n" i x; k bots in
   go inputs bots (fun bots -> ())
 
 let () =
