@@ -52,10 +52,10 @@ let paths target passcode =
 let () =
   let open List in
   let input = "njfxhljp" in
-  let ps = paths (3,-3) input |> S.to_list in
-  let path1 =
-    sort ps ~cmp:(fun x y -> String.(length x - length y)) |> hd_exn in
+  let ps = paths (3,-3) input
+    |> S.to_list
+    |> sort ~cmp:(fun x y -> String.(length x - length y)) in
+  let path1 = hd_exn ps in
   print_endline path1;
-  let path2 =
-    sort ps ~cmp:(fun x y -> String.(length y - length x)) |> hd_exn in
+  let path2 = last_exn ps in
   printf "%d\n" (String.length path2);
