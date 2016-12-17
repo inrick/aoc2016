@@ -30,7 +30,7 @@ let parse s =
   | "value" -> Input (int tokens.(1), int tokens.(5))
   | _ -> assert false
 
-let process target instrs =
+let process instrs =
   let add_bot bots bid bot = M.add bots ~key:bid ~data:bot in
   let find_bot bots = M.find_exn bots in
   let bots = List.fold instrs ~init:M.empty ~f:(fun bots -> function
@@ -40,24 +40,26 @@ let process target instrs =
   let inputs = List.filter_map instrs ~f:(function
     | Input (x, bid) -> Some (x, bid)
     | _ -> None) in
-  let rec go inputs bots k = match inputs with
-    | [] -> k bots
-    | (x, bid)::is -> send_to bots x (Bot bid) (fun bots -> go is bots k)
-  and send_to bots x dest k = match dest with
+  let rec go inputs dicts k = match inputs with
+    | [] -> k dicts
+    | (x, bid)::is -> send_to dicts x (Bot bid) (fun dicts -> go is dicts k)
+  and send_to (bots, outputs) x dest k = match dest with
     | Bot bid ->
       let bot = give_bot x (find_bot bots bid) in
       let bots = add_bot bots bid bot in
       (match bot.low, bot.high with
       | Some l, Some h ->
-        if (l, h) = target then printf "Bot id: %d\n" bid;
-        let bots = add_bot bots bid {bot with low=None} in
-        send_to bots l bot.low_to (fun bots ->
-          let bots = add_bot bots bid {bot with high=None} in
-          send_to bots h bot.high_to k)
-      | _, _ -> k bots)
-    | Output i -> printf "Output %d got value %d\n" i x; k bots in
-  go inputs bots (fun bots -> ())
+        send_to (bots, outputs) l bot.low_to (fun dicts ->
+          send_to dicts h bot.high_to k)
+      | _, _ -> k (bots, outputs))
+    | Output i -> k (bots, M.add outputs ~key:i ~data:x) in
+  go inputs (bots, M.empty) ident
 
 let () =
   let instrs = In_channel.read_lines "input.txt" |> List.map ~f:parse in
-  process (17, 61) instrs;
+  let bots, outputs = process instrs in
+  M.iteri bots ~f:(fun ~key:bid ~data:b -> match b.low, b.high with
+    | Some l, Some h when (l, h) = (17, 61) -> printf "Bot id: %d\n" bid
+    | _, _ -> ());
+  let o i = M.find_exn outputs i in
+  printf "Product of output values: %d\n" (o 0 * o 1 * o 2);
