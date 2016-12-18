@@ -3,23 +3,20 @@ open Printf
 
 let gen s rows =
   let cols = String.length s in
-  let is_trap row i = if i < 0 || cols <= i then false else row.[i] = '^' in
+  let segment prev i =
+    if i < 0 || cols <= i then '.' else prev.[i] in
   let next prev =
-    let is_trap = is_trap prev in
     String.init cols (fun i ->
-      if (is_trap (i-1) && is_trap i && not (is_trap (i+1)))
-      || (not (is_trap (i-1)) && is_trap i && is_trap (i+1))
-      || (is_trap (i-1) && not (is_trap i) && not (is_trap (i+1)))
-      || (not (is_trap (i-1)) && not (is_trap i) && is_trap (i+1))
-      then '^' else '.') in
+      match String.init 3 (fun j -> segment prev (j+i-1)) with
+      | "^^." | ".^^" | "^.." | "..^" -> '^'
+      | _ -> '.') in
   let rec go n acc prev =
     if n = rows then List.rev acc
-    else let xs = next prev in go (n+1) (xs::acc) xs in
+    else let r = next prev in go (n+1) (r::acc) r in
   go 1 [s] s
 
 let count_safe board =
-  let open List in
-  map board ~f:(String.count ~f:((=) '.')) |> fold ~init:0 ~f:(+)
+  List.(map board ~f:(String.count ~f:((=) '.')) |> fold ~init:0 ~f:(+))
 
 let () =
   let input =
