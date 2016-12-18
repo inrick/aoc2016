@@ -28,3 +28,5 @@ let () =
   let board = gen input 40 in
   let safe = count_safe board in
   printf "%d\n" safe;
+  let safe2 = gen input 400000 |> count_safe in
+  printf "%d\n" safe2;
