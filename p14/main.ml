@@ -23,14 +23,15 @@ let quintuplet s c =
     false
   with Not_found -> true
 
-let solve salt =
+let solve salt hash_iters =
   let open Sequence in
   let next i m = M.filter_mapi m (fun ~key ~data ->
     match List.filter data (fun j -> i-j < 1000) with
     | [] -> None
     | xs -> Some xs) in
   unfold_step ~init:(0, M.empty) ~f:(fun (i, m) ->
-    let md5 = Digest.(salt ^ string_of_int i |> string |> to_hex) in
+    let hash x = Digest.(x |> string |> to_hex) in
+    let md5 = Fn.apply_n_times ~n:hash_iters hash (salt ^ string_of_int i) in
     let add_triplet m = match find_triplet md5 with
       | Some c ->
         M.add m ~key:c ~data:(i :: match M.find m c with
@@ -50,4 +51,5 @@ let solve salt =
 
 let () =
   let salt = "jlmsuwbz" in
-  printf "%d\n" (solve salt);
+  printf "%d\n" (solve salt 1);
+  printf "%d\n" (solve salt 2017);
