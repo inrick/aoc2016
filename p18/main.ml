@@ -3,12 +3,13 @@ open Printf
 
 let gen s rows =
   let cols = String.length s in
-  let segment prev i =
-    if i < 0 || cols <= i then '.' else prev.[i] in
+  let is_safe prev i = i < 0 || cols <= i || prev.[i] = '.' in
   let next prev =
+    let is_safe = is_safe prev in
     String.init cols (fun i ->
-      match String.init 3 (fun j -> segment prev (j+i-1)) with
-      | "^^." | ".^^" | "^.." | "..^" -> '^'
+      match is_safe (i-1), is_safe i, is_safe (i+1) with
+      | false, false, true | true, false, false
+      | false, true,  true | true, true,  false -> '^'
       | _ -> '.') in
   let rec go n acc prev =
     if n = rows then List.rev acc
