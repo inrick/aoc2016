@@ -3,15 +3,15 @@ open Printf
 
 let solve elves =
   let ps = Array.create ~len:elves true in
-  let rec fix n =
-    let rec steal m =
-      let m = m mod elves in
-      if ps.(m) then m else steal (m+1) in
-    let n = n mod elves in
-    if not ps.(n) then fix (n+1)
+  let rec steal i =
+    let i = i mod elves in
+    if ps.(i) then i else steal (i+1) in
+  let rec fix i =
+    let i = i mod elves in
+    if not ps.(i) then fix (i+1)
     else
-      let m = steal (n+1) in
-      if m = n then n else (ps.(m) <- false; fix (n+1)) in
+      let j = steal (i+1) in
+      if j = i then i else (ps.(j) <- false; fix (i+1)) in
   fix 0
 
 let () =
