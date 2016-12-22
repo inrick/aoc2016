@@ -61,7 +61,24 @@ let rec eval s =
 
 let scramble s instrs = List.fold instrs ~init:s ~f:eval
 
+let rev_eval s = function
+  | Swap_pos _ | Swap_char _ | Reverse _ as i -> eval s i
+  | Rot_left x -> eval s (Rot_right x)
+  | Rot_right x -> eval s (Rot_left x)
+  | Rot_rel _ as i ->
+    let len = String.length s in
+    List.(range 0 len
+      |> filter_map ~f:(fun n ->
+          let t = eval s (Rot_left n) in
+          if eval t i = s then Some t else None)
+      |> hd_exn)
+  | Move (x, y) -> eval s (Move (y, x))
+
+let unscramble s instrs = List.(rev instrs |> fold ~init:s ~f:rev_eval)
+
 let () =
   let instrs = In_channel.read_all "input.txt" |> parse in
   let scrambled = scramble "abcdefgh" instrs in
   print_endline scrambled;
+  let unscrambled = unscramble "fbgdceah" instrs in
+  print_endline unscrambled;
