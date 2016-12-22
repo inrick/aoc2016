@@ -1,0 +1,4 @@
+B _build
+FLG -short-paths
+PKG core_kernel
+PKG ppx_deriving.std
