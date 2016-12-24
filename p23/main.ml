@@ -32,6 +32,7 @@ module Comp = struct
     [@@deriving show]
 
   let initial = {a=7; b=0; c=0; d=0; pc=0}
+  let initial2 = {a=12; b=0; c=0; d=0; pc=0}
 
   let inc_pc st = {st with pc=st.pc+1}
 
@@ -83,4 +84,5 @@ let () =
   let instrs = In_channel.read_lines "input.txt"
     |> List.map ~f:parse_instr
     |> Array.of_list in
-  Comp.(execute initial instrs |> show) |> print_endline;
+  Comp.(execute initial (Array.copy instrs) |> show) |> print_endline;
+  Comp.(execute initial2 (Array.copy instrs) |> show) |> print_endline;
