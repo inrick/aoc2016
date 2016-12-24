@@ -66,6 +66,7 @@ module Comp = struct
     | exception _ -> ()
 
   let execute st instrs =
+    let instrs = Array.copy instrs in
     let next st = function
       | Cpy (x, y) -> cpy st x y |> inc_pc
       | Jnz (x, y) -> jnz st x y
@@ -84,5 +85,5 @@ let () =
   let instrs = In_channel.read_lines "input.txt"
     |> List.map ~f:parse_instr
     |> Array.of_list in
-  Comp.(execute initial (Array.copy instrs) |> show) |> print_endline;
-  Comp.(execute initial2 (Array.copy instrs) |> show) |> print_endline;
+  Comp.(execute initial instrs |> show) |> print_endline;
+  Comp.(execute initial2 instrs |> show) |> print_endline;
